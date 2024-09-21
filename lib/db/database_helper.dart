@@ -1,17 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-// Model for image data
+// Model for image
 class ImageModel {
   final String? id;
   final String path;
   final String mobile;
   final DateTime timestamp;
+  final String userId; // Add userId
 
   ImageModel({
     this.id,
     required this.path,
     required this.mobile,
     required this.timestamp,
+    required this.userId, // Include userId in constructor
   });
 
   Map<String, dynamic> toMap() {
@@ -19,22 +21,22 @@ class ImageModel {
       'id': id,
       'path': path,
       'mobile': mobile,
-      'timestamp': timestamp.toIso8601String(),
+      'timestamp': Timestamp.fromDate(timestamp), // Ensure this is a Timestamp
+      'userId': userId, // Add userId to the map
     };
-  }factory ImageModel.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    return ImageModel(
-      id: doc['id'],
-      path: data['path'] ?? '',
-      mobile: data['mobile'] ?? '',
-      timestamp: (data['timestamp'] as Timestamp).toDate(),  // Convert Firestore Timestamp to DateTime
-    );
   }
 
-
-
+  factory ImageModel.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return ImageModel(
+      id: data['id'],
+      path: data['path'] ?? '',
+      mobile: data['mobile'] ?? '',
+      timestamp: (data['timestamp'] as Timestamp).toDate(), // Convert Firestore Timestamp to DateTime
+      userId: data['userId'] ?? '', // Add userId from Firestore
+    );
+  }
 }
-
 
 class DatabaseHelper {
   // Singleton instance
@@ -54,7 +56,7 @@ class DatabaseHelper {
         'imagePath': imagePath,
         'prescriptionPath': prescriptionPath,
         'note': note,
-        'timestamp': DateTime.now().toIso8601String(),
+        'timestamp': Timestamp.now(),
       });
     } catch (e) {
       print('Error adding prescription: $e');
@@ -77,29 +79,23 @@ class DatabaseHelper {
       print('Error retrieving prescription: $e');
       return null;
     }
-  }Future<void> insertImage(ImageModel image) async {
+  }
+  Future<void> insertImage(ImageModel image) async {
     try {
       final snapshot = await _firestore
           .collection('images')
-          .where('mobile', isEqualTo: image.mobile)
+          .where('userId', isEqualTo: image.mobile)
           .get();
 
       final imageCount = snapshot.docs.length + 1;
-      final imageId = '${image.mobile}_$imageCount';
+      final imageId = '${image.mobile}_${image.userId}_$imageCount';
 
-      await _firestore.collection('images').doc(imageId).set({
-        'id': imageId,
-        'path': image.path,
-        'mobile': image.mobile,
-        'timestamp': Timestamp.fromDate(image.timestamp),  // Ensure this is a Timestamp
-      });
-
+      await _firestore.collection('images').doc(imageId).set(image.toMap());
       print('Image added with ID: $imageId');
     } catch (e) {
       print('Error inserting image: $e');
     }
   }
-
 
 
   Future<List<ImageModel>> getImages({String? mobile}) async {
@@ -117,21 +113,28 @@ class DatabaseHelper {
     }
   }
 
-  Future<List<String>> getUniqueMobiles() async {
+  Future<List<Map<String, String>>> getUniqueUsers() async {
     try {
       final snapshot = await _firestore.collection('images').get();
-      final Set<String> uniqueMobiles = {};
 
+      final uniqueUsers = <Map<String, String>>[];
       for (var doc in snapshot.docs) {
-        uniqueMobiles.add(doc['mobile'] as String);
-      }
+        final data = doc.data();
+        final userId = data['userId'] as String?;
+        final mobile = data['mobile'] as String?;
 
-      return uniqueMobiles.toList();
+        if (userId != null && mobile != null) {
+          uniqueUsers.add({'userId': userId, 'mobile': mobile});
+        }
+      }
+      return uniqueUsers;
     } catch (e) {
       print('Error retrieving unique mobiles: $e');
       return [];
     }
   }
+
+
 
   Future<void> clearDatabase() async {
     try {
@@ -146,7 +149,6 @@ class DatabaseHelper {
       for (var doc in prescriptionsSnapshot.docs) {
         batch.delete(doc.reference);
       }
-
       await batch.commit();
       print('Database cleared');
     } catch (e) {

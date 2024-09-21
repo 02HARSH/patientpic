@@ -15,9 +15,24 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _mobileController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   Future<void> _login() async {
     String mobile = _mobileController.text.trim();
     String password = _passwordController.text.trim();
+
+    // Validate mobile number and password length
+    if (mobile.length != 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Invalid mobile number')),
+      );
+      return;
+    }
+    if (password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Invalid password')),
+      );
+      return;
+    }
 
     try {
       // Fetch admin credentials from Firestore
@@ -90,7 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
       } on FirebaseAuthException catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Login failed: ${e.message}')),
+            SnackBar(content: Text('Invalid login credentials')),
           );
         }
       }
@@ -103,12 +118,12 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Login'),
+        backgroundColor: Colors.blueAccent,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -128,7 +143,7 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: _login,
               child: Text('Login'),
             ),
-            TextButton(
+            ElevatedButton(
               onPressed: () {
                 Navigator.push(
                   context,
@@ -137,7 +152,7 @@ class _LoginScreenState extends State<LoginScreen> {
               },
               child: Text('Forgot Password?'),
             ),
-            TextButton(
+            ElevatedButton(
               onPressed: () {
                 Navigator.push(
                   context,

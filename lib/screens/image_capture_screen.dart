@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../db/database_helper.dart';
+
 class ImageCaptureScreen extends StatefulWidget {
   @override
   _ImageCaptureScreenState createState() => _ImageCaptureScreenState();
@@ -13,7 +14,7 @@ class ImageCaptureScreen extends StatefulWidget {
 class _ImageCaptureScreenState extends State<ImageCaptureScreen> {
   final ImagePicker _picker = ImagePicker();
   String? _userMobile;
-
+  String? _userId;
   @override
   void initState() {
     super.initState();
@@ -28,9 +29,12 @@ class _ImageCaptureScreenState extends State<ImageCaptureScreen> {
         if (userDoc.exists) {
           setState(() {
             _userMobile = userDoc.data()?['mobile'];
+            // Assuming the user ID is stored in the 'userId' field
+            _userId = userDoc.data()?['userId'];
           });
           // Print the mobile number for debugging
           print('User mobile number: $_userMobile');
+          print('User ID: $_userId');
         } else {
           print('User document does not exist in user_profiles collection.');
         }
@@ -57,6 +61,7 @@ class _ImageCaptureScreenState extends State<ImageCaptureScreen> {
             path: imagePath,
             mobile: _userMobile!,
             timestamp: DateTime.now(),
+            userId: _userId!,
           );
 
           // Insert the image into Firestore with the mobile-based ID
@@ -73,8 +78,6 @@ class _ImageCaptureScreenState extends State<ImageCaptureScreen> {
       print("Error capturing image: $e");
     }
   }
-
-
 
   Future<void> updateTimestamps() async {
     final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -94,12 +97,20 @@ class _ImageCaptureScreenState extends State<ImageCaptureScreen> {
     } catch (e) {
       print('Error updating timestamps: $e');
     }
-  }
-
-  Future<Directory> _getDirectoryForMobile() async {
+  }Future<Directory> _getDirectoryForMobile() async {
     try {
       final directory = await getApplicationDocumentsDirectory();
-      final mobileDirectory = Directory('${directory.path}/images/${_userMobile}');
+
+      // Ensure userId and mobile are not null
+      if (_userId == null || _userMobile == null) {
+        throw Exception('User ID or mobile number is not set.');
+      }
+      print(_userId);
+      // Construct folder name with both user ID and mobile number
+      final folderName = '${_userId}(${_userMobile})';
+      final mobileDirectory = Directory('${directory.path}/images/$folderName');
+      print('Folder name: $folderName');
+      print('Full path: ${directory.path}/images/$folderName');
       if (!await mobileDirectory.exists()) {
         await mobileDirectory.create(recursive: true);
       }
@@ -110,27 +121,48 @@ class _ImageCaptureScreenState extends State<ImageCaptureScreen> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Capture Image'),
+        backgroundColor: Colors.blueAccent, // Enhanced AppBar color
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ElevatedButton(
+            ElevatedButton.icon(
               onPressed: () => _captureImage(ImageSource.camera),
-              child: Text('Capture Image with Camera'),
+              icon: Icon(Icons.camera_alt, size: 30), // Larger icon
+              label: Text(
+                'Capture Image with Camera',
+                style: TextStyle(fontSize: 18), // Improved text style
+              ),
+              style: ElevatedButton.styleFrom(
+                minimumSize: Size(double.infinity, 60), // Full-width button
+                padding: EdgeInsets.symmetric(horizontal: 16), // Padding inside button
+              ),
             ),
-            ElevatedButton(
+            SizedBox(height: 16),
+            ElevatedButton.icon(
               onPressed: () => _captureImage(ImageSource.gallery),
-              child: Text('Select Image from Gallery'),
+              icon: Icon(Icons.photo_library, size: 30), // Larger icon
+              label: Text(
+                'Select Image from Gallery',
+                style: TextStyle(fontSize: 18), // Improved text style
+              ),
+              style: ElevatedButton.styleFrom(
+                minimumSize: Size(double.infinity, 60), // Full-width button
+                padding: EdgeInsets.symmetric(horizontal: 16), // Padding inside button
+              ),
             ),
           ],
         ),
       ),
     );
   }
+
 }

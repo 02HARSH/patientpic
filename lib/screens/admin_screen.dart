@@ -21,9 +21,12 @@ class _AdminScreenState extends State<AdminScreen> {
 
   Future<void> _fetchPendingRequests() async {
     try {
-      QuerySnapshot querySnapshot = await _firestore.collection('pending_requests').get();
+      QuerySnapshot querySnapshot = await _firestore.collection(
+          'pending_requests').get();
       setState(() {
-        _pendingRequests = querySnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+        _pendingRequests =
+            querySnapshot.docs.map((doc) => doc.data() as Map<String, dynamic>)
+                .toList();
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -103,10 +106,11 @@ class _AdminScreenState extends State<AdminScreen> {
             onPressed: _logout,
           ),
         ],
+        backgroundColor: Colors.blueAccent,
       ),
       body: _pendingRequests.isEmpty
           ? Center(child: Text('No pending requests'))
-          : ListView.builder(
+          : ListView.separated(
         itemCount: _pendingRequests.length,
         itemBuilder: (context, index) {
           Map<String, dynamic> request = _pendingRequests[index];
@@ -128,6 +132,11 @@ class _AdminScreenState extends State<AdminScreen> {
             ),
           );
         },
+        separatorBuilder: (context, index) =>
+            Divider(
+              color: Colors.grey, // Customize the color
+              thickness: 1, // Set the thickness of the line
+            ),
       ),
     );
   }

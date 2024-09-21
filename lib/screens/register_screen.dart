@@ -17,6 +17,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  bool _isPasswordVisible = false; // Manage password visibility
+
   bool _isValidMobile(String mobile) {
     return mobile.length == 10 && !mobile.startsWith('0');
   }
@@ -25,15 +27,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return password.length >= 6;
   }
 
-  Future<void> storeUserProfile(String uid, String mobile) async {
+  Future<String> generateUserId(String role) async {
+    QuerySnapshot querySnapshot = await _firestore.collection('users')
+        .where('role', isEqualTo: role)
+        .get();
+
+    int count = querySnapshot.docs.length;
+    return '$role${count + 1}'; // Generates UserID like 'Patient12' or 'Doctor12'
+  }
+
+  Future<void> storeUserProfile(String uid, String mobile, String userId) async {
     try {
       await FirebaseFirestore.instance.collection('user_profiles').doc(uid).set({
         'mobile': mobile,
+        'userId': userId, // Store userId in profile
       });
     } catch (e) {
       print('Error storing user profile: $e');
     }
-  }Future<void> _register() async {
+  }
+
+  Future<void> _register() async {
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
     String mobile = _mobileController.text.trim();
@@ -79,6 +93,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
       // Get the UID of the registered user
       String uid = userCredential.user!.uid;
 
+      // Generate userId based on the role
+      String userId = await generateUserId(_selectedRole);
+
       // Save user details in Firestore
       await _firestore.collection('users').doc(mobile).set({
         'mobile': mobile,
@@ -86,10 +103,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'email': email,
         'role': _selectedRole,
         'approval_status': _selectedRole == 'Doctor' ? 'pending' : 'approved',
+        'userId': userId, // Save the userId in the document
       });
 
-      // Store user profile with mobile number
-      await storeUserProfile(uid, mobile);
+      // Store user profile with mobile number and userId
+      await storeUserProfile(uid, mobile, userId);
 
       if (_selectedRole == 'Doctor') {
         // Add to pending requests for admin approval
@@ -120,12 +138,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('Register'),
+        backgroundColor: Colors.blueAccent,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -142,8 +160,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
             TextField(
               controller: _passwordController,
-              decoration: InputDecoration(labelText: 'Password'),
-              obscureText: true,
+              decoration: InputDecoration(
+                labelText: 'Password',
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isPasswordVisible = !_isPasswordVisible;
+                    });
+                  },
+                ),
+              ),
+              obscureText: !_isPasswordVisible,
             ),
             TextField(
               controller: _mobileController,
@@ -175,4 +205,3 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 }
-
