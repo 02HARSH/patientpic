@@ -162,6 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Text('New User? Register here'),
             ),
           ],
+
         ),
       ),
     );

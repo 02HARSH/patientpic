@@ -88,6 +88,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: '${mobile}@example.com',
         password: password,
+
       );
 
       // Get the UID of the registered user
@@ -103,7 +104,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'email': email,
         'role': _selectedRole,
         'approval_status': _selectedRole == 'Doctor' ? 'pending' : 'approved',
-        'userId': userId, // Save the userId in the document
+        'userId': userId,
       });
 
       // Store user profile with mobile number and userId
