@@ -88,7 +88,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: '${mobile}@example.com',
         password: password,
-
       );
 
       // Get the UID of the registered user
@@ -104,7 +103,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'email': email,
         'role': _selectedRole,
         'approval_status': _selectedRole == 'Doctor' ? 'pending' : 'approved',
-        'userId': userId,
+        'userId': userId, // Save the userId in the document
       });
 
       // Store user profile with mobile number and userId
@@ -150,6 +149,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            Image.asset(
+              'assets/logo.png',
+              height: 100,  // Adjust size as needed
+            ),
             TextField(
               controller: _nameController,
               decoration: InputDecoration(labelText: 'Name'),

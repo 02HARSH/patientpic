@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'login_screen.dart';
 
 class UpdateAdminCredentialsScreen extends StatefulWidget {
@@ -11,7 +11,6 @@ class _UpdateAdminCredentialsScreenState extends State<UpdateAdminCredentialsScr
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<void> _updateCredentials() async {
     String newEmail = _emailController.text.trim();
@@ -25,26 +24,16 @@ class _UpdateAdminCredentialsScreenState extends State<UpdateAdminCredentialsScr
       return;
     }
 
-    try {
-      // Update credentials in Firestore
-      await _firestore.collection('admin').doc('credentials').update({
-        'mobile': newEmail,
-        'password': newPassword,
-      });
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('admin_email', newEmail);
+    await prefs.setString('admin_password', newPassword);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Admin credentials updated successfully')),
-      );
+    // Optional: Clear other user data or perform additional actions
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LoginScreen()),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update credentials: $e')),
-      );
-    }
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+    );
   }
 
   @override
@@ -57,7 +46,7 @@ class _UpdateAdminCredentialsScreenState extends State<UpdateAdminCredentialsScr
           children: [
             TextField(
               controller: _emailController,
-              decoration: InputDecoration(labelText: 'New Mobile Number'),
+              decoration: InputDecoration(labelText: 'New Email'),
             ),
             TextField(
               controller: _passwordController,

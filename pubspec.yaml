@@ -41,7 +41,9 @@ dependencies:
 
 flutter:
   uses-material-design: true
-
+  assets:
+    - assets/download.png
+    - assets/logo.png
 dev_dependencies:
   flutter_test:
     sdk: flutter

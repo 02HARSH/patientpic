@@ -5,6 +5,7 @@ import 'register_screen.dart';
 import 'home_screen.dart';
 import 'admin_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart'; // Added import for input formatters
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -129,10 +130,15 @@ class _LoginScreenState extends State<LoginScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            Image.asset(
+              'assets/logo.png',
+              height: 100,  // Adjust size as needed
+            ),
             TextField(
               controller: _mobileController,
               decoration: InputDecoration(labelText: 'Mobile Number'),
               keyboardType: TextInputType.phone,
+              inputFormatters: [LengthLimitingTextInputFormatter(10)], // Added input formatter
             ),
             TextField(
               controller: _passwordController,
@@ -162,7 +168,6 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Text('New User? Register here'),
             ),
           ],
-
         ),
       ),
     );

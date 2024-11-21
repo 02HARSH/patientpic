@@ -9,6 +9,7 @@ import 'image_capture_screen.dart';
 import 'package:path/path.dart' as p;
 import 'package:http/http.dart' as http;
 import 'package:open_file/open_file.dart';
+
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:path_provider/path_provider.dart';
@@ -101,12 +102,14 @@ class _HomeScreenState extends State<HomeScreen> {
         Future.delayed(_timeoutDuration),
       ]);
     } catch (e) {
+      // Handle any errors that might occur during the fetch
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LoginScreen()),
       );
     }
 
+    // If still loading after timeout, assume failure
     if (mounted && _isLoading) {
       Navigator.pushReplacement(
         context,
@@ -212,7 +215,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         } else if (snapshot.hasData && snapshot.data == false) {
                           return Text('No prescription available');
                         }
-                        return Container();
+                        return Container(); // No data or error
                       },
                     ),
                     FutureBuilder<Map<String, dynamic>?>(

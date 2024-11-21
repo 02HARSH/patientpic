@@ -29,8 +29,10 @@ class _ImageCaptureScreenState extends State<ImageCaptureScreen> {
         if (userDoc.exists) {
           setState(() {
             _userMobile = userDoc.data()?['mobile'];
+            // Assuming the user ID is stored in the 'userId' field
             _userId = userDoc.data()?['userId'];
           });
+          // Print the mobile number for debugging
           print('User mobile number: $_userMobile');
           print('User ID: $_userId');
         } else {
@@ -62,7 +64,8 @@ class _ImageCaptureScreenState extends State<ImageCaptureScreen> {
             userId: _userId!,
           );
 
-           await DatabaseHelper.instance.insertImage(imageModel);
+          // Insert the image into Firestore with the mobile-based ID
+          await DatabaseHelper.instance.insertImage(imageModel);
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Image captured and saved successfully')),
@@ -98,10 +101,12 @@ class _ImageCaptureScreenState extends State<ImageCaptureScreen> {
     try {
       final directory = await getApplicationDocumentsDirectory();
 
+      // Ensure userId and mobile are not null
       if (_userId == null || _userMobile == null) {
         throw Exception('User ID or mobile number is not set.');
       }
       print(_userId);
+      // Construct folder name with both user ID and mobile number
       final folderName = '${_userId}(${_userMobile})';
       final mobileDirectory = Directory('${directory.path}/images/$folderName');
       print('Folder name: $folderName');
@@ -131,27 +136,27 @@ class _ImageCaptureScreenState extends State<ImageCaptureScreen> {
           children: [
             ElevatedButton.icon(
               onPressed: () => _captureImage(ImageSource.camera),
-              icon: Icon(Icons.camera_alt, size: 30),
+              icon: Icon(Icons.camera_alt, size: 30), // Larger icon
               label: Text(
                 'Capture Image with Camera',
-                style: TextStyle(fontSize: 18),
+                style: TextStyle(fontSize: 18), // Improved text style
               ),
               style: ElevatedButton.styleFrom(
-                minimumSize: Size(double.infinity, 60),
-                padding: EdgeInsets.symmetric(horizontal: 16),
+                minimumSize: Size(double.infinity, 60), // Full-width button
+                padding: EdgeInsets.symmetric(horizontal: 16), // Padding inside button
               ),
             ),
             SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: () => _captureImage(ImageSource.gallery),
-              icon: Icon(Icons.photo_library, size: 30),
+              icon: Icon(Icons.photo_library, size: 30), // Larger icon
               label: Text(
                 'Select Image from Gallery',
-                style: TextStyle(fontSize: 18),
+                style: TextStyle(fontSize: 18), // Improved text style
               ),
               style: ElevatedButton.styleFrom(
-                minimumSize: Size(double.infinity, 60),
-                padding: EdgeInsets.symmetric(horizontal: 16),
+                minimumSize: Size(double.infinity, 60), // Full-width button
+                padding: EdgeInsets.symmetric(horizontal: 16), // Padding inside button
               ),
             ),
           ],
